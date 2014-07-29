@@ -1,0 +1,22 @@
+{
+  "name": "dot-view",
+  "description": "A simple doT based view class with caching, partials, layout and view helper support",
+  "version": "0.1.0",
+  "keywords": ["doT", "template", "templating", "view", "fast", "express"],
+  "homepage": "https://github.com/bartve/dot-view",
+  "bugs": "https://github.com/bartve/dot-view/issues",
+  "license": "MIT",
+  "author": "Bart van Eijck <voodoo107@hotmail.com>",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bartve/dot-view.git"
+  },
+  "scripts": {},
+  "dependencies": {
+    "dot": "1.0.x"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  }
+}
