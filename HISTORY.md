@@ -1,3 +1,7 @@
+Unreleased
+==================
+  * Including a template from a layout changed from `{{=it.content}}` to `{{#def._content}}`
+
 0.1.1 / 2014-07-30
 ==================
   * Added more documentation

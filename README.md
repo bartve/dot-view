@@ -45,7 +45,7 @@ var html2 = view.assign({greet: 'Hello again!'}).render('another_template.dot');
 ```
 
 #### Layout
-Add a layout to the template and assign variables to the layout. In `layout.dot` the content of `tempplate.dot` is rendered with `{{=it.content}}`.
+Add a layout to the template and assign variables to the layout. In `layout.dot` the content of `template.dot` is included with `{{#def._content}}`.
 ```javascript
 var view = new View('/tpl/path', 'template.dot', {greet: 'Hello!'});
 view.layout(new View('/layouts', 'layout.dot', {title: 'My title'}));
@@ -61,14 +61,14 @@ var html = view.render();
 		<title>{{=it.title}}</title>
 	</head>
 	<body>
-		<div>{{=it.content}}</div>
+		<div>{{#def._content}}</div>
 	</body>
 </html>
 ```
 
 #### Partials
 
-In doT partials are called `defines`. To add literal partials or partials from other `.dot` template files simply:
+In doT partials are included with `#def`. To add literal partials or partials from other template files simply:
 ```javascript
 var view = new View('/tpl/path', 'template.dot', {greet: 'Hello!'});
 view.define({
@@ -88,6 +88,8 @@ Where `template.dot` could look like:
 <!-- Output the literal string partial -->
 <div>{{#def.string_partial}}</div>
 ```
+
+See the doT [advanced examples](https://github.com/olado/doT/blob/master/examples/advancedsnippet.txt) for more information on how to use partials in doT directly.
 
 #### View helpers
 
@@ -159,10 +161,10 @@ app.get('/', function(req, res){
 ```
 
 ## Reserved template variable names
-The following object keys have a special meaning in `dot-view` and should not be used for passing normal values to templates:
-  * `content` is used by the layout view to parse the content of the template in. If you're not using a layout this name is safe to use.
+The following object keys have a special meaning in `dot-view` and should not be used for passing normal values or partials to templates:
+  * A partial with the name `_content` is used by the layout view to include the content of the template.
 
-When passing variables in the `options` param of `res.render()` when using `__express()`:
+When passing variables in the `options` parameter of `res.render()` when using `__express()`:
   * `layout` is reserved for passing the layout template or `View` instance
   * `defines` is reserved for passing partials
   * `helpers` is reserved for passing additional view helpers
