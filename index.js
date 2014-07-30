@@ -127,7 +127,7 @@ View.prototype.render = function(file){
 		tplFunction = doT.template(tplFile, this.settings, this.defines);
 	}
 	html = tplFunction(this.data, this.helpers); // Render html by calling the compiled template function
-	if(this.layoutView){
+	if(this.layoutView instanceof View){
 		this.layoutView.assign({content: html});
 		html = this.layoutView.render();
 	}

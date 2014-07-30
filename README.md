@@ -6,9 +6,9 @@
 
 ## Features
 
-  * Supports layouts, partials and view helper functions
-  * Supports caching of compiled template functions (enabled by default)
-  * Incluses `__express()` function for basic [Express](http://expressjs.com/) integration
+  * Supports layouts, partials and custom view helper functions
+  * Implements caching of compiled template functions (enabled by default)
+  * Basic [Express](http://expressjs.com/) integration with `__express()` or `display()`
 
 ## Installation
 
@@ -102,7 +102,7 @@ You can add your own helper functions by simply adding them to the `helpers` pro
 
 ```javascript
 var view = new View('/tpl/path', 'template.dot', {greet: 'hello'});
-view.helpers.greet = function(greet){ return 'Well '+greet+' there!' };
+view.helpers.greet = function(greet){ return 'Well '+greet+' there!'; };
 var html = view.render();
 ```
 
@@ -120,11 +120,12 @@ Will output
 
 ### Express
 
-You can easily integrate `dot-view` in your `Express` app in two ways.
+You can easily integrate `dot-view` in your [Express](http://expressjs.com/) app in two ways.
 
 #### __express()
-`dot-view` implements a `__express()` function that can be used by `Express`'s view renderer.
+`dot-view` exposes an `__express()` function that can be [registered](http://expressjs.com/api.html#app.engine) as the template engine for Express.
 ```javascript
+// Tell Express to use the dot-view engine for .dot templates
 app.engine('dot', require('dot-view').__express);
 
 app.get('/', function(req, res){
@@ -134,19 +135,37 @@ app.get('/', function(req, res){
 });
 ```
 
+Passing a layout, partial and helper
+```javascript
+var options = {
+	layout: new View('/layouts', 'layout.dot', {title: 'My title'}),
+	defines: { partial: '<div>{{=it.greet}} I\'m a partial.</div>'},
+	helpers: { greet: function(greet){ return 'Well '+greet+' there!'; } },
+	greet: 'hello'
+};
+res.render('/full/path/to/template.dot', options, function(err, html){
+	if(!err){ res.send(html); }
+});
+```
+
 #### display()
-You can also bypass `Express`'s template facilities completely and simply pass `Express`'s `res` to `view.display()` along with an optional the template file and optional HTTP status code.
+You can also bypass Express's template facilities completely and simply pass Express's `res` to `view.display()` along with an optional the template file and optional HTTP status code.
 
 ```javascript
 app.get('/', function(req, res){
-	var view = new View('/tpl/path', 'template.dot', {greet: 'hello'});
+	var view = new View('/tpl/path', 'template.dot', {greet: 'Hello!'});
 	view.display(res);
 });
 ```
 
 ## Reserved template varable names
-The following object keys vave a special meaning in `dot-view` and should not be used for passing normal values to templates:
-  * `content` is used by the layout view to parse the content of the template in
+The following object keys have a special meaning in `dot-view` and should not be used for passing normal values to templates:
+  * `content` is used by the layout view to parse the content of the template in. If you're not using a layout this name is safe to use.
+
+When passing variables in the `options` param of `res.render()` when using `__express()`:
+  * `layout` is reserved for passing the layout template or `View` instance
+  * `defines` is reserved for passing partials
+  * `helpers` is reserved for passing additional view helpers
 
 ## Resources
 

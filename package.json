@@ -1,7 +1,7 @@
 {
   "name": "dot-view",
   "description": "A simple doT based view class with caching, partials, layout and view helper support",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "keywords": ["doT", "template", "templating", "view", "fast", "express"],
   "homepage": "https://github.com/bartve/dot-view",
   "bugs": "https://github.com/bartve/dot-view/issues",
