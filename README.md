@@ -149,7 +149,7 @@ res.render('/full/path/to/template.dot', options, function(err, html){
 ```
 
 #### display()
-You can also bypass Express's template facilities completely and simply pass Express's `res` to `view.display()` along with an optional the template file and optional HTTP status code.
+You can also bypass Express's template facilities completely and simply pass Express's `res` to `view.display()` along with an optional template file and optional HTTP status code.
 
 ```javascript
 app.get('/', function(req, res){
@@ -158,7 +158,7 @@ app.get('/', function(req, res){
 });
 ```
 
-## Reserved template varable names
+## Reserved template variable names
 The following object keys have a special meaning in `dot-view` and should not be used for passing normal values to templates:
   * `content` is used by the layout view to parse the content of the template in. If you're not using a layout this name is safe to use.
 
