@@ -1,8 +1,20 @@
+'use strict';
 
 var doT = require('dot'),
 	fs = require('fs'),
-	path = require('path'),
-	_cache = {}; // Memory cache for compiled template functions
+	path = require('path');
+
+/**
+ * Expose the View constructor
+ */
+
+exports.View = View;
+
+/**
+ * Expose the compiled template function cache
+ */
+
+exports.cache = {};
 
 /**
  * Light weight view class based on doT templating engine.
@@ -18,12 +30,12 @@ function View(tplPath, tplFile, data){
 	tplPath&&(this.path = tplPath);
 	tplFile&&(this.file = tplFile);
 	this.data = data||{};
-	this.defines = {}; // doT defines objects
+	this.defines = {};
 	this.enabled = true;
-	/** Default settings */
+	// Default settings
 	this.settings = doT.templateSettings;
 	this.settings.varname = 'it,helpers'; // Add the helpers as a second data param for the parser
-	this.settings.cache = true; // Use memory cache for compiled templates
+	this.settings.cache = true; // Use memory cache for compiled template functions
 }
 
 /**
@@ -99,16 +111,6 @@ View.prototype.define = function(defines){
 };
 
 /**
- * Clear the compiled templates cache.
- * @return {View}
- */
-
-View.prototype.clearCache = function(){
-	_cache = {};
-	return this;
-};
-
-/**
  * Render the given template file to a string.
  * @param {String} [file] - The template file to render (optional when the file has already been set)
  * @return {String}
@@ -116,15 +118,11 @@ View.prototype.clearCache = function(){
 
 View.prototype.render = function(file){
 	var path = this.path+'/'+(file||this.file), html, tplFunction;
-	if(this.settings.cache){ // Use caching? Get from cache and set if not present
-		if(!_cache[path]){
-			var tplFile = fs.readFileSync(path); 
-			_cache[path] = doT.template(tplFile, this.settings, this.defines);
-		}
-		tplFunction = _cache[path];
-	}else{ // No caching, just compile.
-		var tplFile = fs.readFileSync(path);
-		tplFunction = doT.template(tplFile, this.settings, this.defines);
+	if(!(this.settings.cache) || !exports.cache[path]){
+		tplFunction = doT.template(fs.readFileSync(path, {encoding: 'utf8'}), this.settings, this.defines);
+		this.settings.cache && (exports.cache[path] = tplFunction);
+	}else{
+		tplFunction = exports.cache[path];
 	}
 	html = tplFunction(this.data, this.helpers); // Render html by calling the compiled template function
 	if(this.layoutView instanceof View){
@@ -146,12 +144,6 @@ View.prototype.display = function(res, file, status){
 };
 
 /**
- * Expose the View constructor
- */
-
-module.exports.View = View;
-
-/**
  * Basic Express support http://expressjs.com/api.html#app.engine
  * @param {String} tplPath - Full path to the template file incl. file name.
  * @param {Object} [options] - Template data/options
@@ -159,39 +151,43 @@ module.exports.View = View;
  * @return {String|Function}
  */
 
-module.exports.__express = function(tplPath, options, callback){
-	if(typeof options === 'function'){
-		callback = options, options = null;
-	}
-	!options&&(options = {});
-	var view = new View(path.dirname(tplPath), path.basename(tplPath)),
-		data = {};
+exports.__express = function(tplPath, options, callback){
+	var view = new View(path.dirname(tplPath), path.basename(tplPath));
 	
-	for(var key in options){
-		// Add the layout view when present
-		if((key === 'layout')){
-			var layout = options[key];
-			if(!(layout instanceof View)){ // layout is a string
-				layout = new View(path.dirname(layout), path.basename(layout));
+	if((arguments.length === 2) && (typeof options === 'function')){
+		callback = options; options = null;
+	}else if(typeof options === 'object'){
+		var data = {};
+		for(var key in options){
+			// Add the layout view when present
+			if((key === 'layout')){
+				var layout = options[key];
+				if(!(layout instanceof View)){ // Layout is a string
+					layout = new View(path.dirname(layout), path.basename(layout));
+				}
+				view.layout(layout);
 			}
-			view.layout(layout);
-		}
-		// Add defines when present
-		else if((key === 'defines') && (typeof options[key] === 'object')){
-			view.define(options[key]);
-		}
-		// Add view helper functions when present
-		else if((key === 'helpers') && (typeof options[key] === 'object')){
-			for(var helper in options[key]){
-				view.helpers[helper] = options[key][helper];
+			// Add defines when present
+			else if((key === 'defines') && (typeof options[key] === 'object')){
+				view.define(options[key]);
+			}
+			// Add view helper functions when present
+			else if((key === 'helpers') && (typeof options[key] === 'object')){
+				for(var helper in options[key]){
+					view.helpers[helper] = options[key][helper];
+				}
+			}
+			// Enable/disable template function caching
+			else if(key === 'cache'){
+				view.settings.cache = options[key];
+			}
+			// Normal template variables
+			else{
+				data[key] = options[key];
 			}
 		}
-		// Normal template variables
-		else{
-			data[key] = options[key];
-		}
+		view.assign(data);
 	}
-	view.assign(data);
 	
 	if(typeof callback === 'function'){
 		var html;

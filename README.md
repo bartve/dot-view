@@ -168,6 +168,7 @@ When passing variables in the `options` parameter of `res.render()` when using `
   * `layout` is reserved for passing the layout template or `View` instance
   * `defines` is reserved for passing partials
   * `helpers` is reserved for passing additional view helpers
+  * `cache` is reserved for enabling/disabling the template function cache
 
 ## Resources
 
