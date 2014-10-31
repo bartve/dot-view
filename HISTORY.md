@@ -1,3 +1,7 @@
+0.2.1 / 2014-10-31
+==================
+  * Better JSDoc 3 documentation
+
 0.2.0 / 2014-08-01
 ==================
   * Including a template from a layout changed from `{{=it.content}}` to `{{#def._content}}`

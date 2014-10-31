@@ -1,28 +1,31 @@
 'use strict';
 
+/** @module dot-view */
+
 var doT = require('dot'),
 	fs = require('fs'),
 	path = require('path');
 
 /**
  * Expose the View constructor
+ * @type {View}
  */
 
 exports.View = View;
 
 /**
  * Expose the compiled template function cache
+ * @type {object}
  */
 
 exports.cache = {};
 
 /**
- * Light weight view class based on doT templating engine.
- * For quick use, the most important properties can be set in the constructor.
+ * Object constructor. For quick use, the most important properties can be set in the constructor.
  * @constructor
- * @param {String} [tplPath] - The path of the template file
- * @param {String} [tplFile] - The filename of the template file
- * @param {Object} [data]	 - The template data
+ * @param {string} [tplPath] - The path of the template file
+ * @param {string} [tplFile] - The filename of the template file
+ * @param {object} [data={}] - The template data
  * @return {View}
  */
 
@@ -40,16 +43,31 @@ function View(tplPath, tplFile, data){
 
 /**
  * Container for view helper functions. Usage: {{=it.helpers.functionName(it.var)}}
+ * @type {object}
  */
 
 View.prototype.helpers = {
-	// Truncate a string. Usage: {{=helpers.truncate(str)}}
+	/**
+	 * Truncate a string. Usage: {{=helpers.truncate(str)}}
+	 * @param {string} str - The input string
+	 * @param {number} [len=50] - The optional maximum string length (default = 50 characters)
+	 * @param {string} [replace=...] - Optional replace string (defaults to "...")
+	 * @returns {string}
+	 */ 
 	truncate: function(str, len, replace){
 		len||(len = 50); 
 		replace||(replace = '...');
 		return (str.length > len) ? str.trim().substr(0,len).trim()+replace : str;
 	},
-	// Format money. Usage: {{=helpers.money(3.5, 2, ',', '.')}}
+	
+	/**
+	 * Format money. Usage: {{=helpers.money(3.5, 2, ',', '.')}}
+	 * @param {number} nr - The quantity
+	 * @param {number} [dec=2] - Optional decimal positions (defaults to 2)
+	 * @param {string} [decPoint=.] - Optional decimal point character (defaults to ".")
+	 * @param {string} [thousandSep=,] - Optional thousand separator character (defaults to ",")
+	 * @returns {string}
+	 */
 	money: function(nr, dec, decPoint, thousandSep){
 		decPoint||(decPoint = '.');
 		thousandSep||(thousandSep = ',');
@@ -63,8 +81,8 @@ View.prototype.helpers = {
 
 /**
  * Assign template data to the view.
- * @param {Object} [data={}] - The template data
- * @return {View}
+ * @param {object} [data={}] - The template data
+ * @returns {View}
  */
 
 View.prototype.assign = function(data){
@@ -77,8 +95,8 @@ View.prototype.assign = function(data){
 
 /**
  * Toggle the enabled state of the current view.
- * @param {Boolean} [enabled] - Optional boolean (or some truthy/falsy value) whether the view is enabled
- * @return {View}
+ * @param {boolean} [enabled] - Optional boolean (or some truthy/falsy value) whether the view is enabled
+ * @returns {View}
  */
 
 View.prototype.toggle = function(enabled){
@@ -89,7 +107,7 @@ View.prototype.toggle = function(enabled){
 /**
  * Get or set the current layout View.
  * @param {View} layout - The layout View instance
- * @return {View}
+ * @returns {View}
  */
 
 View.prototype.layout = function(layout){
@@ -99,8 +117,8 @@ View.prototype.layout = function(layout){
 
 /**
  * Define compile time items like sub-templates. Usage in template: {{#def.foo}}
- * @param {Object} defines - Defines object like {"foo":"<div>{{=it.bar}} foobar?</div>"}
- * @return {View}
+ * @param {object} defines - Defines object like {"foo":"<div>{{=it.bar}} foobar?</div>"}
+ * @returns {View}
  */
 
 View.prototype.define = function(defines){
@@ -112,8 +130,8 @@ View.prototype.define = function(defines){
 
 /**
  * Render the given template file to a string.
- * @param {String} [file] - The template file to render (optional when the file has already been set)
- * @return {String}
+ * @param {string} [file] - The template file to render (optional when the file has already been set)
+ * @returns {string}
  */
 
 View.prototype.render = function(file){
@@ -135,8 +153,8 @@ View.prototype.render = function(file){
 /**
  * Combine view rendering and the sending of the response to the browser.
  * @param {ServerResponse} res - An Express server response object
- * @param {String} [file] - The template file to render
- * @param {Number} [status=200] - The HTTP status
+ * @param {string} [file] - The template file to render
+ * @param {number} [status=200] - The HTTP status
  */
 
 View.prototype.display = function(res, file, status){
@@ -145,10 +163,10 @@ View.prototype.display = function(res, file, status){
 
 /**
  * Basic Express support http://expressjs.com/api.html#app.engine
- * @param {String} tplPath - Full path to the template file incl. file name.
- * @param {Object} [options] - Template data/options
- * @param {Function} [callback] - Callback function to be executed (optional)
- * @return {String|Function}
+ * @param {string} tplPath - Full path to the template file incl. file name.
+ * @param {object} [options] - Optional template data/options
+ * @param {function} [callback] - Optional callback function to be executed
+ * @returns {string|function}
  */
 
 exports.__express = function(tplPath, options, callback){
