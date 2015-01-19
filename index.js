@@ -30,8 +30,6 @@ exports.cache = {};
  */
 
 function View(tplPath, tplFile, data){
-	tplPath&&(this.path = tplPath);
-	tplFile&&(this.file = tplFile);
 	this.data = data||{};
 	this.defines = {};
 	this.enabled = true;
@@ -39,6 +37,12 @@ function View(tplPath, tplFile, data){
 	this.settings = doT.templateSettings;
 	this.settings.varname = 'it,helpers'; // Add the helpers as a second data param for the parser
 	this.settings.cache = true; // Use memory cache for compiled template functions
+	this.settings.layout = /\{\{##\s*(?:def\.)?_layout\s*(?:\:|=)\s*([\s\S]+?)\s*#\}\}/; // Layout regex
+	if(tplPath){ this.path = tplPath; }
+	if(tplFile){
+		this.file = tplFile;
+		this.layout();
+	}
 }
 
 /**
@@ -106,13 +110,31 @@ View.prototype.toggle = function(enabled){
 
 /**
  * Get or set the current layout View.
- * @param {View} layout - The layout View instance
- * @returns {View}
+ * This function will also try to get the layout definition from the current template file.
+ * @param {View} [layout] - An optional layout View instance to set
+ * @return {View|undefined}
  */
 
 View.prototype.layout = function(layout){
-	(layout instanceof View)&&(this.layoutView = layout);
-	return this.layoutView;
+	if(layout instanceof View){ 
+		this._layoutView = layout;
+	// Check the current template file for layout tags when it hasn't been checked before
+	}else if(!this._layoutView && this.file && (typeof this._layoutFromTemplate === 'undefined')){
+		var layoutPath = fs.readFileSync(this.path+'/'+this.file, {encoding: 'utf8'}).match(this.settings.layout);
+		if(layoutPath){
+			layoutPath = layoutPath[1];
+			if(/^(?:\/|[a-zA-Z]:(?:\/|\\))/.test(layoutPath)){ // Is the path absolute?
+				layoutPath = path.normalize(layoutPath);
+			}else{ // Relative paths need to be resolved first
+				layoutPath = path.resolve(this.path, layoutPath);
+			}
+			this._layoutView = new View(path.dirname(layoutPath), path.basename(layoutPath));
+			this._layoutFromTemplate = true;
+		}else{
+			this._layoutFromTemplate = false;
+		}
+	}
+	return this._layoutView;
 };
 
 /**
@@ -135,17 +157,18 @@ View.prototype.define = function(defines){
  */
 
 View.prototype.render = function(file){
-	var path = this.path+'/'+(file||this.file), html, tplFunction;
+	if(file){ this.file = file; }
+	var path = this.path+'/'+this.file, html, tplFunction;
 	if(!(this.settings.cache) || !exports.cache[path]){
 		tplFunction = doT.template(fs.readFileSync(path, {encoding: 'utf8'}), this.settings, this.defines);
-		this.settings.cache && (exports.cache[path] = tplFunction);
+		if(this.settings.cache){ exports.cache[path] = tplFunction; }
 	}else{
 		tplFunction = exports.cache[path];
 	}
 	html = tplFunction(this.data, this.helpers); // Render html by calling the compiled template function
-	if(this.layoutView instanceof View){
-		this.layoutView.define({_content: html});
-		html = this.layoutView.render();
+	if(this.layout()){
+		this._layoutView.define({_content: html});
+		html = this._layoutView.render();
 	}
 	return html;
 };

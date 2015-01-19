@@ -1,3 +1,7 @@
+0.3.0 / unreleased
+==================
+  * Added the possibility to define a layout from a template file
+
 0.2.1 / 2014-10-31
 ==================
   * Better JSDoc 3 documentation
