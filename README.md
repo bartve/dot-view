@@ -4,15 +4,17 @@
 
 [![Dependency Status](https://david-dm.org/bartve/dot-view.png)](https://david-dm.org/bartve/dot-view)
 
+[![NPM](https://nodei.co/npm/dot-view.png?downloads=true)](https://nodei.co/npm/dot-view/)
+
 ## Features
 
   * Supports layouts, partials and custom view helper functions
-  * Implements caching of compiled template functions (enabled by default)
+  * Implements memory caching of compiled template functions (enabled by default)
   * Basic [Express](http://expressjs.com/) integration with `__express()` or `display()`
 
 ## Installation
 
-[![NPM](https://nodei.co/npm/dot-view.png?downloads=true)](https://nodei.co/npm/dot-view/)
+`npm install dot-view`
 
 ## Usage
 
@@ -29,11 +31,7 @@ var View = require('dot-view').View;
 
 ```javascript
 var html = new View('/tpl/path', 'template.dot', {text: 'Hello!'}).render();
-```
-
-Or
-
-```javascript
+// Or
 var html = new View('/tpl/path', 'template.dot').assign({text: 'Hello!'}).render();
 ```
 
@@ -66,6 +64,27 @@ var html = view.render();
 </html>
 ```
 
+It's also possible to define the layout from a template file. The default syntax is `{{##def._layout:path/to/layout.dot#}}` or simply `{{##_layout:path/to/layout.dot#}}` when you don't want it to end up in your `defines`. Paths can be absolute or relative to the template file the layout is defined in.
+
+`template.dot`
+
+```html
+{{##def._layout:../layouts/layout.dot#}}
+<p>Say {{=it.greet}}</p>
+```
+
+You can assign variables to the layout like this:
+```javascript
+var view = new View('/tpl/path', 'template.dot', {greet: 'hello!'});
+// The layout will be picked up automatically from template.dot when defined
+if(view.layout()){
+	view.layout().assign({title: 'My title'});
+}
+var html = view.render();
+```
+
+Like all `doT` tags, you can change the format of the layout declaration by altering its regular expression. For example, setting `view.settings.layout` to `/\{\{\s+\/\*\s*layout:\s*(.+\S+)\s*\*\/\s*\}\}/` will allow for the layout to be defined as comments `{{ /* layout:path/to/layout.dot */ }}`.
+
 #### Partials
 
 In doT partials are included with `#def`. To add literal partials or partials from other template files simply:
@@ -89,7 +108,13 @@ Where `template.dot` could look like:
 <div>{{#def.string_partial}}</div>
 ```
 
-See the doT [advanced examples](https://github.com/olado/doT/blob/master/examples/advancedsnippet.txt) for more information on how to use partials in doT directly.
+It's also possible to include a sub-template directly from a template file. Paths can be absolute or relative to the template file `def.include` is called in.
+
+```html
+<div>{{#def.include('path/to/sub-template.dot')}}</div>
+```
+
+See the `doT` [advanced examples](https://github.com/olado/doT/blob/master/examples/advancedsnippet.txt) for more information on how to use partials in `doT` directly.
 
 #### View helpers
 
@@ -114,7 +139,7 @@ In your `template.dot`
 <div>{{!helpers.greet(it.greet)}}</div>
 ```
 
-Will output
+Will output:
 
 ```html
 <div>Well hello there!</div>
@@ -162,7 +187,9 @@ app.get('/', function(req, res){
 
 ## Reserved template variable names
 The following object keys have a special meaning in `dot-view` and should not be used for passing normal values or partials to templates:
-  * A partial with the name `_content` is used by the layout view to include the content of the template.
+  * Anything that is assigned to `def.include` and is not a function will be overwritten by a function to include a sub-template from a file path
+  * A partial with the name `def._content` is used by the layout view to include the content of the template
+  * When using `def._layout` in a template to define the layout, this will act like a normal `define` in `doT`
 
 When passing variables in the `options` parameter of `res.render()` when using `__express()`:
   * `layout` is reserved for passing the layout template or `View` instance

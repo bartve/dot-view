@@ -7,6 +7,22 @@ var doT = require('dot'),
 	path = require('path');
 
 /**
+ * Parse absolute and relative path strings to a full path
+ * @param {string} filePath
+ * @param {string} currentPath
+ * @returns {string}
+ */
+
+var parsePath = function(filePath, currentPath){
+	if(/^(?:\/|[a-zA-Z]:(?:\/|\\))/.test(filePath)){ // Is the path absolute?
+		filePath = path.normalize(filePath);
+	}else{ // Relative paths need to be resolved first
+		filePath = path.resolve(currentPath, filePath);
+	}
+	return filePath;
+};
+
+/**
  * Expose the View constructor
  * @type {View}
  */
@@ -122,12 +138,7 @@ View.prototype.layout = function(layout){
 	}else if(!this._layoutView && this.file && (typeof this._layoutFromTemplate === 'undefined')){
 		var layoutPath = fs.readFileSync(this.path+'/'+this.file, {encoding: 'utf8'}).match(this.settings.layout);
 		if(layoutPath){
-			layoutPath = layoutPath[1];
-			if(/^(?:\/|[a-zA-Z]:(?:\/|\\))/.test(layoutPath)){ // Is the path absolute?
-				layoutPath = path.normalize(layoutPath);
-			}else{ // Relative paths need to be resolved first
-				layoutPath = path.resolve(this.path, layoutPath);
-			}
+			layoutPath = parsePath(layoutPath[1], this.path);
 			this._layoutView = new View(path.dirname(layoutPath), path.basename(layoutPath));
 			this._layoutFromTemplate = true;
 		}else{
@@ -158,15 +169,23 @@ View.prototype.define = function(defines){
 
 View.prototype.render = function(file){
 	if(file){ this.file = file; }
-	var path = this.path+'/'+this.file, html, tplFunction;
+	var path = this.path+'/'+this.file, html, tplFunction, self = this;
 	if(!(this.settings.cache) || !exports.cache[path]){
+		// Add the def.include() function when not set
+		if(typeof this.defines.include !== 'function'){
+			this.defines.include = function(filePath){
+				return fs.readFileSync(parsePath(filePath, self.path), {encoding: 'utf8'});
+			};
+		}
 		tplFunction = doT.template(fs.readFileSync(path, {encoding: 'utf8'}), this.settings, this.defines);
-		if(this.settings.cache){ exports.cache[path] = tplFunction; }
+		if(this.settings.cache){ // Add the compiled template function to the function cache
+			exports.cache[path] = tplFunction;
+		}
 	}else{
 		tplFunction = exports.cache[path];
 	}
-	html = tplFunction(this.data, this.helpers); // Render html by calling the compiled template function
-	if(this.layout()){
+	html = tplFunction(this.data, this.helpers);
+	if(this.layout()){ // Insert the template HTML into the layout 
 		this._layoutView.define({_content: html});
 		html = this._layoutView.render();
 	}
