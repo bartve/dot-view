@@ -27,22 +27,35 @@ Here are some basic usage examples that connect with the public API. Error handl
 var View = require('dot-view').View;
 ```
 
-#### Simple template
+#### Go!
 
-```javascript
-var html = new View('/tpl/path', 'template.dot', {text: 'Hello!'}).render();
-// Or
-var html = new View('/tpl/path', 'template.dot').assign({text: 'Hello!'}).render();
+`template.dot`
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test</title>
+	</head>
+	<body>
+		<div>{{=it.greet}} world!</div>
+	</body>
+</html>
 ```
 
-Re-use the view object for rendering multiple templates in the same path
+```javascript
+var html = new View('/tpl/path', 'template.dot', {greet: 'Hello'}).render();
+// Or
+var html = new View('/tpl/path', 'template.dot').assign({greet: 'Hello'}).render();
+```
+
+Re-use the view object for rendering multiple templates in the same path:
 ```javascript
 var view = new View('/tpl/path');
-var html1 = view.assign({greet: 'Hello!'}).render('template.dot');
-var html2 = view.assign({greet: 'Hello again!'}).render('another_template.dot');
+var html1 = view.assign({greet: 'Hello'}).render('template.dot');
+var html2 = view.assign({greet: 'Hello again'}).render('another_template.dot');
 ```
 
-#### Layout
+### Layout
 Add a layout to the template and assign variables to the layout. In `layout.dot` the content of `template.dot` is included with `{{#def._content}}`.
 ```javascript
 var view = new View('/tpl/path', 'template.dot', {greet: 'Hello!'});
@@ -70,12 +83,12 @@ It's also possible to define the layout from a template file. The default syntax
 
 ```html
 {{##def._layout:../layouts/layout.dot#}}
-<p>Say {{=it.greet}}</p>
+<p>Say {{=it.greet}}!</p>
 ```
 
 You can assign variables to the layout like this:
 ```javascript
-var view = new View('/tpl/path', 'template.dot', {greet: 'hello!'});
+var view = new View('/tpl/path', 'template.dot', {greet: 'hello'});
 // The layout will be picked up automatically from template.dot when defined
 if(view.layout()){
 	view.layout().assign({title: 'My title'});
@@ -83,9 +96,9 @@ if(view.layout()){
 var html = view.render();
 ```
 
-Like all `doT` tags, you can change the format of the layout declaration by altering its regular expression. For example, setting `view.settings.layout` to `/\{\{\s+\/\*\s*layout:\s*(.+\S+)\s*\*\/\s*\}\}/` will allow for the layout to be defined as comments `{{ /* layout:path/to/layout.dot */ }}`.
+Like all `doT` tags, you can change the format of the layout definition by altering its regular expression. For example, setting `view.settings.layout` to `/\{\{\s+\/\*\s*layout:\s*(.+\S+)\s*\*\/\s*\}\}/` will allow for the layout to be defined as comments `{{ /* layout:path/to/layout.dot */ }}`.
 
-#### Partials
+### Partials
 
 In doT partials are included with `#def`. To add literal partials or partials from other template files simply:
 ```javascript
@@ -108,7 +121,7 @@ Where `template.dot` could look like:
 <div>{{#def.string_partial}}</div>
 ```
 
-It's also possible to include a sub-template directly from a template file. Paths can be absolute or relative to the template file `def.include` is called in.
+It's also possible to include a sub-template directly from a template file. Paths can be absolute or relative to the template file `def.include()` is called in.
 
 ```html
 <div>{{#def.include('path/to/sub-template.dot')}}</div>
@@ -116,7 +129,7 @@ It's also possible to include a sub-template directly from a template file. Path
 
 See the `doT` [advanced examples](https://github.com/olado/doT/blob/master/examples/advancedsnippet.txt) for more information on how to use partials in `doT` directly.
 
-#### View helpers
+### Helpers
 
 `dot-view` comes with two default view helpers `truncate()` (truncate a string) and `currency()` (format currency). Take a look at `View.prototype.helpers` for their parameters. View helpers are located in the `helpers` variable inside a template.
 
@@ -129,14 +142,14 @@ You can add your own helper functions by simply adding them to the `helpers` pro
 
 ```javascript
 var view = new View('/tpl/path', 'template.dot', {greet: 'hello'});
-view.helpers.greet = function(greet){ return 'Well '+greet+' there!'; };
+view.helpers.sayGreeting = function(greet){ return 'Well '+greet+' there!'; };
 var html = view.render();
 ```
 
 In your `template.dot`
 
 ```html
-<div>{{!helpers.greet(it.greet)}}</div>
+<div>{{!helpers.sayGreeting(it.greet)}}</div>
 ```
 
 Will output:
@@ -167,7 +180,7 @@ Passing a layout, partial and helper
 var options = {
 	layout: new View('/layouts', 'layout.dot', {title: 'My title'}),
 	defines: { partial: '<div>{{=it.greet}} I\'m a partial.</div>'},
-	helpers: { greet: function(greet){ return 'Well '+greet+' there!'; } },
+	helpers: { sayGreeting: function(greet){ return 'Well '+greet+' there!'; } },
 	greet: 'hello'
 };
 res.render('/full/path/to/template.dot', options, function(err, html){

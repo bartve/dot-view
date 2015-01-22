@@ -1,4 +1,4 @@
-0.3.0 / unreleased
+0.3.0 / 2015-01-22
 ==================
   * Added the possibility to define a layout from within a template file with `{{##def._layout:path/to/layout.dot#}}`
   * Added the possibility to include a sub-template file from a within template file with `{{#def.include('path/to/sub-template.dot')}}`
