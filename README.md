@@ -1,6 +1,6 @@
 ## About
 
-`dot-view` is an easy to use [Node.js](http://www.nodejs.org) view class wrapper around the fast [doT](https://www.npmjs.org/package/dot) templating engine.
+`dot-view` is an easy to use [Node.js](http://www.nodejs.org) view class wrapper around the fast [doT](https://www.npmjs.com/package/dot) templating engine.
 
 [![Dependency Status](https://david-dm.org/bartve/dot-view.png)](https://david-dm.org/bartve/dot-view)
 

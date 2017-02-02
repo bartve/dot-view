@@ -1,7 +1,11 @@
+0.3.1 / 2017-02-02
+==================
+  * Updated `doT` dependency
+
 0.3.0 / 2015-01-22
 ==================
   * Added the possibility to define a layout from within a template file with `{{##def._layout:path/to/layout.dot#}}`
-  * Added the possibility to include a sub-template file from a within template file with `{{#def.include('path/to/sub-template.dot')}}`
+  * Added the possibility to include a sub-template file from within a template file with `{{#def.include('path/to/sub-template.dot')}}`
 
 0.2.1 / 2014-10-31
 ==================
